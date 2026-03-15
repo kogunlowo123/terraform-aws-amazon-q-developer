@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture -- terraform-aws-amazon-q-developer</title>
+<style>
+  :root{--ink:#0b0c0b;--accent:#c8420a;--surface:#131413;--border:#2a2b2a;--text:#d4d4d4;--text-dim:#888;--card:#181918;--success:#2ea043;--warn:#d29922;--info:#388bfd}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"SF Mono","Cascadia Code","Fira Code",monospace;background:var(--ink);color:var(--text);line-height:1.65;padding:0}
+  a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+  .container{max-width:1140px;margin:0 auto;padding:2rem 1.5rem}
+  header{border-bottom:2px solid var(--accent);padding:2.5rem 0 1.5rem;margin-bottom:2.5rem}
+  header h1{font-size:1.6rem;color:#fff;margin-bottom:.35rem}
+  header p.subtitle{color:var(--text-dim);font-size:.85rem}
+  .badge{display:inline-block;font-size:.7rem;padding:.15rem .55rem;border-radius:3px;margin-right:.4rem;margin-bottom:.3rem;border:1px solid var(--border);color:var(--text-dim)}
+  .badge--accent{border-color:var(--accent);color:var(--accent)}
+  h2{font-size:1.15rem;color:var(--accent);margin:2.5rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+  h3{font-size:.95rem;color:#fff;margin:1.5rem 0 .6rem}
+  p,li{font-size:.82rem}
+  ul,ol{padding-left:1.4rem;margin-bottom:1rem}li{margin-bottom:.3rem}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-bottom:1.5rem}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:1rem}
+  .card h4{font-size:.8rem;color:var(--accent);margin-bottom:.4rem}
+  .card p{font-size:.75rem;color:var(--text-dim)}
+  .card .val{font-size:1.3rem;color:#fff;font-weight:700;margin:.3rem 0}
+
+  .arch-diagram{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1.5rem;overflow-x:auto;margin:1rem 0 1.5rem}
+  .flow{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;justify-content:center}
+  .flow .box{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:.55rem .9rem;font-size:.72rem;text-align:center;min-width:90px;color:var(--text)}
+  .flow .box.accent{border-color:var(--accent);color:var(--accent)}
+  .flow .arrow{color:var(--accent);font-size:.9rem;flex-shrink:0}
+  .flow-row{display:flex;align-items:center;gap:.5rem;justify-content:center;margin-bottom:.5rem;flex-wrap:wrap}
+
+  table{width:100%;border-collapse:collapse;font-size:.75rem;margin:1rem 0}
+  th,td{border:1px solid var(--border);padding:.45rem .6rem;text-align:left}
+  th{background:var(--surface);color:var(--accent);font-weight:600}
+  tr:nth-child(even){background:var(--surface)}
+
+  .checklist{list-style:none;padding-left:0}
+  .checklist li{padding:.35rem 0;font-size:.78rem;border-bottom:1px solid var(--border)}
+  .checklist li::before{content:"[ ] ";color:var(--accent);font-weight:700}
+
+  .section-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+  @media(max-width:700px){.section-grid{grid-template-columns:1fr}}
+
+  .code-block{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1rem;font-size:.73rem;overflow-x:auto;margin:.8rem 0;white-space:pre}
+
+  footer{border-top:1px solid var(--border);margin-top:3rem;padding:1.5rem 0;text-align:center;font-size:.7rem;color:var(--text-dim)}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>terraform-aws-amazon-q-developer</h1>
+  <p class="subtitle">Architecture Reference -- AI-Powered Developer Productivity Platform</p>
+  <div style="margin-top:.7rem">
+    <span class="badge badge--accent">Terraform</span>
+    <span class="badge badge--accent">AWS</span>
+    <span class="badge">CodePipeline</span>
+    <span class="badge">CodeBuild</span>
+    <span class="badge">CodeGuru</span>
+    <span class="badge">CodeArtifact</span>
+    <span class="badge">KMS</span>
+    <span class="badge">SNS</span>
+  </div>
+</header>
+
+<!-- ─── Executive Summary ─── -->
+<h2>Executive Summary</h2>
+<p>This module provisions a complete AI-powered developer productivity platform on AWS. It creates a CI/CD pipeline with CodePipeline and CodeBuild, integrates Amazon CodeGuru Reviewer for automated code reviews, enables security scanning (Bandit, Safety), manages packages via CodeArtifact, and provides encrypted artifact storage with SNS-based notifications. All resources are encrypted with KMS and follow least-privilege IAM practices.</p>
+
+<!-- ─── Overview Cards ─── -->
+<h2>Overview</h2>
+<div class="cards">
+  <div class="card"><h4>AWS Resources</h4><div class="val">14+</div><p>CodePipeline, CodeBuild, CodeStar Connection, CodeArtifact, CodeGuru, S3, KMS, SNS, IAM Roles, CloudWatch Logs, Notification Rules</p></div>
+  <div class="card"><h4>Required Variables</h4><div class="val">2</div><p>project_name, repository_url</p></div>
+  <div class="card"><h4>Outputs</h4><div class="val">8</div><p>ARNs for pipeline, build, artifacts, connections, notifications</p></div>
+  <div class="card"><h4>Providers</h4><div class="val">AWS</div><p>hashicorp/aws >= 5.40.0, Terraform >= 1.5.0</p></div>
+</div>
+
+<!-- ─── Architecture Diagram ─── -->
+<h2>Architecture Diagram</h2>
+<div class="arch-diagram">
+  <div class="flow-row">
+    <div class="box accent">Source Repository</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box">CodeStar Connection</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box accent">CodePipeline</div>
+  </div>
+  <div class="flow-row">
+    <div class="box accent">CodePipeline</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box">Source Stage</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box">Build Stage</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box">Custom Stages</div>
+  </div>
+  <div class="flow-row">
+    <div class="box">Build Stage</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box accent">CodeBuild Project</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box">BuildSpec (Python/Node)</div>
+  </div>
+  <div class="flow-row">
+    <div class="box accent">CodeBuild Project</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box">Security Scanning</div>
+    <div class="arrow">&amp;</div>
+    <div class="box">Test Reports</div>
+    <div class="arrow">&amp;</div>
+    <div class="box">CodeArtifact</div>
+  </div>
+  <div class="flow-row">
+    <div class="box">CodeGuru Reviewer</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box accent">Source Repository</div>
+  </div>
+  <div class="flow-row">
+    <div class="box accent">CodePipeline / CodeBuild</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box">S3 Artifacts (KMS)</div>
+    <div class="arrow">&amp;</div>
+    <div class="box">SNS Notifications</div>
+    <div class="arrow">&#8594;</div>
+    <div class="box">Email</div>
+  </div>
+  <div class="flow-row">
+    <div class="box">CloudWatch Logs</div>
+    <div class="arrow">&#8592;</div>
+    <div class="box accent">CodeBuild Project</div>
+  </div>
+</div>
+
+<!-- ─── Component Breakdown ─── -->
+<h2>Component Breakdown</h2>
+<div class="section-grid">
+  <div>
+    <h3>CI/CD Pipeline</h3>
+    <ul>
+      <li><strong>CodePipeline</strong> -- Orchestrates Source, Build, and custom stages</li>
+      <li><strong>CodeBuild</strong> -- Executes builds with Python 3.12 / Node 20 runtime</li>
+      <li><strong>CodeStar Connection</strong> -- Links to GitHub, GitLab, or Bitbucket</li>
+      <li><strong>BuildSpec</strong> -- Inline spec with install, pre_build, build, post_build phases</li>
+    </ul>
+    <h3>Code Quality</h3>
+    <ul>
+      <li><strong>CodeGuru Reviewer</strong> -- Automated code reviews (optional, default on)</li>
+      <li><strong>Security Scanning</strong> -- Bandit + Safety scans during pre_build (optional)</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Package Management</h3>
+    <ul>
+      <li><strong>CodeArtifact Domain</strong> -- Encrypted package domain</li>
+      <li><strong>CodeArtifact Repository</strong> -- Project packages with npm upstream proxy</li>
+    </ul>
+    <h3>Notifications</h3>
+    <ul>
+      <li><strong>SNS Topic</strong> -- KMS-encrypted notification channel</li>
+      <li><strong>Notification Rules</strong> -- Pipeline and build event subscriptions</li>
+      <li><strong>Email Subscriptions</strong> -- Configurable via notification_emails</li>
+    </ul>
+    <h3>Storage &amp; Encryption</h3>
+    <ul>
+      <li><strong>S3 Bucket</strong> -- Versioned, encrypted artifact store (90-day lifecycle)</li>
+      <li><strong>KMS Key</strong> -- Dedicated key with automatic rotation (or bring your own)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ─── Data Flow ─── -->
+<h2>Data Flow</h2>
+<ol>
+  <li>Developer pushes code to source repository (GitHub/GitLab/Bitbucket)</li>
+  <li>CodeStar Connection detects change and triggers CodePipeline</li>
+  <li>Source Stage pulls code through the connection into S3 artifacts</li>
+  <li>Build Stage invokes CodeBuild which runs the inline BuildSpec</li>
+  <li>BuildSpec installs deps, runs security scans (Bandit, Safety), builds project, and runs tests</li>
+  <li>Build artifacts are stored in the KMS-encrypted S3 bucket</li>
+  <li>CodeGuru Reviewer independently reviews code and posts findings</li>
+  <li>Pipeline/build events fire notification rules to SNS, which delivers to email subscribers</li>
+  <li>Optional custom stages (Deploy, Approval, etc.) execute after Build</li>
+</ol>
+
+<!-- ─── Security Controls ─── -->
+<h2>Security Controls</h2>
+<table>
+  <tr><th>Control</th><th>Implementation</th></tr>
+  <tr><td>Encryption at Rest</td><td>KMS key with automatic annual rotation; S3 SSE-KMS with bucket key</td></tr>
+  <tr><td>Encryption in Transit</td><td>S3 public access fully blocked; all AWS API calls over TLS</td></tr>
+  <tr><td>IAM Least Privilege</td><td>Separate CodeBuild and CodePipeline roles scoped to specific resources</td></tr>
+  <tr><td>Artifact Lifecycle</td><td>90-day expiration; 30-day noncurrent version expiration</td></tr>
+  <tr><td>Security Scanning</td><td>Bandit (Python SAST) + Safety (dependency vulnerability checks)</td></tr>
+  <tr><td>Code Review</td><td>CodeGuru Reviewer for automated ML-powered reviews</td></tr>
+  <tr><td>SNS Encryption</td><td>SNS topic encrypted with the same KMS key</td></tr>
+  <tr><td>Build Isolation</td><td>Linux container with local Docker layer and source caching</td></tr>
+</table>
+
+<!-- ─── Industry Adaptation ─── -->
+<h2>Industry Adaptation</h2>
+<div class="section-grid">
+  <div>
+    <h3>Software Engineering Teams</h3>
+    <p>Full CI/CD with automated code quality reviews. Extend pipeline_stages for multi-environment deployments (staging, production). Enable CodeArtifact for private package management.</p>
+  </div>
+  <div>
+    <h3>Security-Conscious Organizations</h3>
+    <p>Enable security_scanning for SAST/SCA in every build. Use CodeGuru Reviewer for ML-powered vulnerability detection. All artifacts encrypted with customer-managed KMS keys.</p>
+  </div>
+  <div>
+    <h3>Enterprise / Multi-Repo</h3>
+    <p>Deploy one module instance per repository. Share a single CodeArtifact domain across projects. Use SNS notifications for centralized build monitoring.</p>
+  </div>
+  <div>
+    <h3>Startups / Fast Iteration</h3>
+    <p>Minimal config: just project_name and repository_url. Automatic builds on every push. Add custom stages as the deployment process matures.</p>
+  </div>
+</div>
+
+<!-- ─── Production Readiness Checklist ─── -->
+<h2>Production Readiness Checklist</h2>
+<ul class="checklist">
+  <li>Complete CodeStar Connection handshake in AWS Console after terraform apply</li>
+  <li>Verify KMS key policy allows intended principals</li>
+  <li>Subscribe security/ops email addresses to SNS topic</li>
+  <li>Confirm build image supports your language runtimes</li>
+  <li>Test pipeline with a manual trigger: <code>aws codepipeline start-pipeline-execution</code></li>
+  <li>Review CodeGuru Reviewer findings for initial recommendations</li>
+  <li>Enable S3 access logging on the artifact bucket for auditing</li>
+  <li>Configure remote Terraform state backend (S3 + DynamoDB)</li>
+  <li>Set up cross-account deployment stages if multi-account</li>
+  <li>Tag all resources with Environment, Team, ManagedBy</li>
+</ul>
+
+<!-- ─── Config Reference ─── -->
+<h2>Configuration Reference</h2>
+<h3>Inputs</h3>
+<table>
+  <tr><th>Name</th><th>Type</th><th>Default</th><th>Required</th><th>Description</th></tr>
+  <tr><td>project_name</td><td>string</td><td>--</td><td>yes</td><td>Name prefix for all resources (2-49 chars, alphanumeric + hyphens)</td></tr>
+  <tr><td>repository_url</td><td>string</td><td>--</td><td>yes</td><td>Source repo ID (e.g., org/repo)</td></tr>
+  <tr><td>source_provider</td><td>string</td><td>GitHub</td><td>no</td><td>GitHub, GitLab, Bitbucket, or GitHubEnterpriseServer</td></tr>
+  <tr><td>branch_name</td><td>string</td><td>main</td><td>no</td><td>Branch to build from</td></tr>
+  <tr><td>build_compute_type</td><td>string</td><td>BUILD_GENERAL1_MEDIUM</td><td>no</td><td>CodeBuild compute size</td></tr>
+  <tr><td>build_image</td><td>string</td><td>aws/codebuild/amazonlinux2-x86_64-standard:5.0</td><td>no</td><td>Docker image for builds</td></tr>
+  <tr><td>enable_code_review</td><td>bool</td><td>true</td><td>no</td><td>Enable CodeGuru Reviewer</td></tr>
+  <tr><td>enable_security_scanning</td><td>bool</td><td>true</td><td>no</td><td>Enable Bandit + Safety scans</td></tr>
+  <tr><td>codeartifact_domain</td><td>string</td><td>""</td><td>no</td><td>CodeArtifact domain name (empty = skip)</td></tr>
+  <tr><td>pipeline_stages</td><td>list(object)</td><td>[]</td><td>no</td><td>Additional pipeline stages beyond Source/Build</td></tr>
+  <tr><td>notification_emails</td><td>list(string)</td><td>[]</td><td>no</td><td>Email addresses for SNS notifications</td></tr>
+  <tr><td>encryption_key_arn</td><td>string</td><td>""</td><td>no</td><td>Existing KMS key ARN (empty = create new)</td></tr>
+  <tr><td>tags</td><td>map(string)</td><td>{}</td><td>no</td><td>Tags for all resources</td></tr>
+</table>
+
+<h3>Outputs</h3>
+<table>
+  <tr><th>Name</th><th>Description</th></tr>
+  <tr><td>codebuild_project_arn</td><td>ARN of the CodeBuild project</td></tr>
+  <tr><td>codepipeline_arn</td><td>ARN of the CodePipeline</td></tr>
+  <tr><td>codeartifact_domain_arn</td><td>ARN of the CodeArtifact domain</td></tr>
+  <tr><td>codeartifact_repository_arn</td><td>ARN of the CodeArtifact repository</td></tr>
+  <tr><td>codeguru_association_arn</td><td>ARN of the CodeGuru Reviewer association</td></tr>
+  <tr><td>s3_artifact_bucket</td><td>Name of the S3 artifact bucket</td></tr>
+  <tr><td>sns_topic_arn</td><td>ARN of the SNS notification topic</td></tr>
+  <tr><td>connection_arn</td><td>ARN of the CodeStar source connection</td></tr>
+</table>
+
+<!-- ─── Deployment ─── -->
+<h2>Deployment</h2>
+<div class="code-block">terraform init
+terraform plan -out=tfplan
+terraform apply tfplan
+
+# Complete CodeStar Connection handshake in AWS Console:
+# Developer Tools > Settings > Connections
+
+# Trigger pipeline manually:
+aws codepipeline start-pipeline-execution --name &lt;project_name&gt;
+
+# Check pipeline status:
+aws codepipeline get-pipeline-state --name &lt;project_name&gt;
+
+# Tail build logs:
+aws logs tail /aws/codebuild/&lt;project_name&gt; --follow</div>
+
+<!-- ─── Links ─── -->
+<h2>Links</h2>
+<ul>
+  <li><a href="https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/what-is.html">Amazon Q Developer User Guide</a></li>
+  <li><a href="https://docs.aws.amazon.com/codeguru/latest/reviewer-ug/welcome.html">Amazon CodeGuru Reviewer</a></li>
+  <li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codebuild_project">Terraform aws_codebuild_project</a></li>
+  <li><a href="https://docs.aws.amazon.com/codepipeline/latest/userguide/welcome.html">AWS CodePipeline User Guide</a></li>
+  <li><a href="https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html">AWS CodeArtifact User Guide</a></li>
+  <li><a href="https://docs.aws.amazon.com/dtconsole/latest/userguide/connections.html">AWS CodeStar Connections</a></li>
+</ul>
+
+<footer>
+  terraform-aws-amazon-q-developer &middot; Architecture Reference &middot; Generated 2026-03-15 &middot; MIT License
+</footer>
+
+</div>
+</body>
+</html>
