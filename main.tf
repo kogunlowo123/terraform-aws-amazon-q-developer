@@ -60,10 +60,6 @@ resource "aws_kms_alias" "this" {
   target_key_id = aws_kms_key.this[0].key_id
 }
 
-locals {
-  kms_key_arn = var.encryption_key_arn != "" ? var.encryption_key_arn : aws_kms_key.this[0].arn
-}
-
 ###############################################################################
 # S3 Bucket for Artifacts
 ###############################################################################
@@ -88,7 +84,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts" {
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm     = "aws:kms"
-      kms_master_key_id = local.kms_key_arn
+      kms_master_key_id = var.encryption_key_arn != "" ? var.encryption_key_arn : aws_kms_key.this[0].arn
     }
     bucket_key_enabled = true
   }
@@ -139,7 +135,7 @@ resource "aws_codeartifact_domain" "this" {
   count = var.codeartifact_domain != "" ? 1 : 0
 
   domain         = var.codeartifact_domain
-  encryption_key = local.kms_key_arn
+  encryption_key = var.encryption_key_arn != "" ? var.encryption_key_arn : aws_kms_key.this[0].arn
 
   tags = var.tags
 }
@@ -237,7 +233,7 @@ resource "aws_iam_role_policy" "codebuild" {
           "kms:ReEncrypt*",
           "kms:GenerateDataKey*"
         ]
-        Resource = [local.kms_key_arn]
+        Resource = [var.encryption_key_arn != "" ? var.encryption_key_arn : aws_kms_key.this[0].arn]
       },
       {
         Effect = "Allow"
@@ -340,7 +336,7 @@ resource "aws_codebuild_project" "this" {
   description   = "Build project for ${var.project_name} with Amazon Q code review integration"
   build_timeout = 60
   service_role  = aws_iam_role.codebuild.arn
-  encryption_key = local.kms_key_arn
+  encryption_key = var.encryption_key_arn != "" ? var.encryption_key_arn : aws_kms_key.this[0].arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -553,7 +549,7 @@ resource "aws_iam_role_policy" "codepipeline" {
           "kms:ReEncrypt*",
           "kms:GenerateDataKey*"
         ]
-        Resource = [local.kms_key_arn]
+        Resource = [var.encryption_key_arn != "" ? var.encryption_key_arn : aws_kms_key.this[0].arn]
       },
       {
         Effect = "Allow"
@@ -579,7 +575,7 @@ resource "aws_codepipeline" "this" {
     type     = "S3"
 
     encryption_key {
-      id   = local.kms_key_arn
+      id   = var.encryption_key_arn != "" ? var.encryption_key_arn : aws_kms_key.this[0].arn
       type = "KMS"
     }
   }
@@ -653,7 +649,7 @@ resource "aws_codepipeline" "this" {
 
 resource "aws_sns_topic" "pipeline" {
   name              = "${var.project_name}-pipeline-notifications"
-  kms_master_key_id = local.kms_key_arn
+  kms_master_key_id = var.encryption_key_arn != "" ? var.encryption_key_arn : aws_kms_key.this[0].arn
 
   tags = var.tags
 }
